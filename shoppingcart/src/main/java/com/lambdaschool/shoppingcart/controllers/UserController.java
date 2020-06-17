@@ -44,6 +44,16 @@ public class UserController
                                     HttpStatus.OK);
     }
 
+    @GetMapping(value = "/user/{name}/",
+            produces = {"application/json"})
+    public ResponseEntity<?> getUserByName(
+            @PathVariable
+                    String name) {
+        User u = userService.findUserByName(name);
+        return new ResponseEntity<>(u,
+                HttpStatus.OK);
+    }
+
     @PostMapping(value = "/user", consumes = {"application/json"})
     public ResponseEntity<?> addUser(@Valid @RequestBody User newuser)
     {

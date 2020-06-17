@@ -8,14 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Transactional
 @Service(value = "userService")
 public class UserServiceImpl
-        implements UserService
-{
+        implements UserService {
     /**
      * Connects this service to the users repository
      */
@@ -26,8 +26,7 @@ public class UserServiceImpl
     private CartService cartService;
 
     @Override
-    public List<User> findAll()
-    {
+    public List<User> findAll() {
         List<User> list = new ArrayList<>();
         /*
          * findAll returns an iterator set.
@@ -40,16 +39,27 @@ public class UserServiceImpl
     }
 
     @Override
-    public User findUserById(long id)
-    {
+    public User findUserById(long id) {
         return userrepos.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User id " + id + " not found!"));
     }
 
+    @Override
+    public User findUserByName(String name) throws
+            EntityNotFoundException {
+        User user = userrepos.findByName(name.toLowerCase());
+
+        if (user == null) {
+            throw new EntityNotFoundException("User " + name + " not found!");
+        }
+
+        return user;
+    }
+
+
     @Transactional
     @Override
-    public void delete(long id)
-    {
+    public void delete(long id) {
         userrepos.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User id " + id + " not found!"));
         userrepos.deleteById(id);
@@ -57,16 +67,15 @@ public class UserServiceImpl
 
     @Transactional
     @Override
-    public User save(User user)
-    {
+    public User save(User user) {
         User newUser = new User();
 
         newUser.setUsername(user.getUsername());
         newUser.setComments(user.getComments());
+        newUser.setPasswordNoCrypt(user.getPassword());
 
         if (user.getCarts()
-                .size() > 0)
-        {
+                .size() > 0) {
             throw new ResourceFoundException("Carts are not added through users");
         }
         return userrepos.save(newUser);

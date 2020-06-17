@@ -1,6 +1,10 @@
 package com.lambdaschool.shoppingcart.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -10,11 +14,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 public class User
         extends Auditable
 {
@@ -25,8 +30,12 @@ public class User
     @Column(nullable = false,
             unique = true)
     private String username;
-
     private String comments;
+
+
+    @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
 
     @OneToMany(mappedBy = "user",
             cascade = CascadeType.ALL)
@@ -34,48 +43,96 @@ public class User
             allowSetters = true)
     private List<Cart> carts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user",
+            cascade = CascadeType.ALL)
+    @JsonIgnoreProperties(value = "user",
+            allowSetters = true)
+    private List<UserRoles> roles = new ArrayList<>();
+
     public User()
     {
 
     }
 
-    public long getUserid()
-    {
+    public User(String username, String comments, String password, List<Cart> carts, List<UserRoles> roles) {
+        this.username = username;
+        this.comments = comments;
+        this.password = password;
+        this.carts = carts;
+        this.roles = roles;
+    }
+
+    public long getUserid() {
         return userid;
     }
 
-    public void setUserid(long userid)
-    {
+    public void setUserid(long userid) {
         this.userid = userid;
     }
 
-    public String getUsername()
-    {
+    public String getUsername() {
         return username;
     }
 
-    public void setUsername(String username)
-    {
+    public void setUsername(String username) {
         this.username = username;
     }
 
-    public String getComments()
-    {
+    public String getComments() {
         return comments;
     }
 
-    public void setComments(String comments)
-    {
+    public void setComments(String comments) {
         this.comments = comments;
     }
 
-    public List<Cart> getCarts()
-    {
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPasswordNoCrypt(String password){
+        this.password = password;
+    }
+
+    public void setPassword(String password) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.password = passwordEncoder.encode(password);
+    }
+
+    public List<Cart> getCarts() {
         return carts;
     }
 
-    public void setCarts(List<Cart> carts)
-    {
+    public void setCarts(List<Cart> carts) {
         this.carts = carts;
     }
+
+    public List<UserRoles> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<UserRoles> roles) {
+        this.roles = roles;
+    }
+
+    public void addRole(Role role) {
+        roles.add(new UserRoles(this,
+                role));
+    }
+
+    @JsonIgnore
+    public List<SimpleGrantedAuthority> getAuthority() {
+        List<SimpleGrantedAuthority> rtnList = new ArrayList<>();
+
+        for (UserRoles r : this.roles) {
+            String myRole = "ROLE_" + r.getRole()
+                    .getName()
+                    .toUpperCase();
+            rtnList.add(new SimpleGrantedAuthority(myRole));
+        }
+
+        return rtnList;
+    }
+
+
 }
