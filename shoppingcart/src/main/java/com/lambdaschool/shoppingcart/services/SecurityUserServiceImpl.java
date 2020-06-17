@@ -1,9 +1,12 @@
 package com.lambdaschool.shoppingcart.services;
 
+import com.lambdaschool.shoppingcart.exceptions.ResourceNotFoundException;
+import com.lambdaschool.shoppingcart.repositories.UserRepository;
 import com.lambdaschool.usermodel.exceptions.ResourceNotFoundException;
 import com.lambdaschool.usermodel.models.User;
 import com.lambdaschool.usermodel.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
@@ -34,11 +37,11 @@ public class SecurityUserServiceImpl
      */
     @Transactional
     @Override
-    public UserDetails loadUserByUsername(String s)
+    public UserDetails loadUserByUsername(String u)
             throws
             ResourceNotFoundException
     {
-        User user = userrepos.findByUsername(s.toLowerCase());
+        User user = userrepos.findByName(u.toLowerCase());
         if (user == null)
         {
             throw new ResourceNotFoundException("Invalid username or password.");

@@ -23,6 +23,8 @@ public interface UserService
      * @return The given User or throws an exception if not found.
      */
     User findUserById(long id);
+    User findUserByName(String name);
+
 
     /**
      * Deletes the user record from the database based off of the provided primary key
